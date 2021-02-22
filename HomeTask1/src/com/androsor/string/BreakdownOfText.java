@@ -1,7 +1,7 @@
 package com.androsor.string;
 
-import java.util.Arrays;
-import java.util.Scanner;
+import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -13,64 +13,130 @@ import java.util.regex.Pattern;
 
 public class BreakdownOfText {
 
+    private static final String TEXT = "\tПервый абзац. Три предложения. Три!\n" +
+            "\tВторой абзац. Пять предложений. Это третье предложение. Это четвертое. И это пятое...\n" +
+            "\tТретий абзац и всего одно предложение.\n" +
+            "\tЧетвертый абзац и семь предложений. Второе. Третье. Четвертое. Пятое. Шестое? Седьмое.\n" +
+            "\tПятый абзац и снова одно предложение.\n" +
+            "\tШестой абзац. Два предложения и всякая фигня непотребная.\n";
+    private static final Pattern PARAGRAPHS_PATTERN = Pattern.compile("(\\t*.+\\n+)");
+    private static final Pattern SENTENCES_PATTERN = Pattern.compile("([^.!?]+[.!?])");
+    private static final Pattern WORD_PATTERN = Pattern.compile("([А-Яа-я]+'*[А-Яа-я]+)");
+    private static final Pattern FINISH_WORD_PATTERN = Pattern.compile("([.!?]+\\n*)");
+
     public static void main(String[] args) {
 
-        String command;
-
-        do {
-
-            System.out.println("Введите \"1\" чтобы отсортировать  абзацы  по  количеству  предложений");
-            System.out.println("Введите \"2\" чтобы в  каждом  предложении  отсортировать  слова  по  длине");
-            System.out.println("Введите \"3\" чтобы отсортировать лексемы в предложении по убыванию количества вхождений заданного символа, а в случае равенства – по алфавиту");
-            System.out.println("Введите \"0\" чтобы напечатать исходный текст");
-            System.out.println("Введите \"9\" чтобы завершить программу");
-
-            command = getStrFromCons();
-            System.out.println("---------------------------");
-
-            switch (command) {
-
-                case "1" ->
-                    sortParagraphs(text);
-
-
-                case "2" ->
-
-                    sortSentence(text);
-
-
-                case "3" ->
-
-                    sortWord(text);
-
-
-                case "0" ->
-                    System.out.println(text);
-
-
-            }
-            System.out.println("---------------------------");
-
-        } while (!command.equals("9"));
+        printOptions();
+        run();
     }
 
+    private static void run() {
+        while (true) {
+            String command = enterStringFromConsole();
+            switch (command) {
+                case "0" -> printOptions();
+                case "1" -> System.out.println(TEXT);
+                case "2" -> System.out.println(sortStringBySizeParagraphs(TEXT));
+                case "3" -> System.out.println(sortWordsOfTextByLength(TEXT));
+                case "4" -> sortWord(TEXT);
+                case "9" -> System.exit(9);
+                default -> System.out.println(" Неверная команда");
+            }
+            System.out.println("---------------------------");
+        }
+    }
 
-    public static String getStrFromCons() {
-
+    public static String enterStringFromConsole() {
         @SuppressWarnings("resource")
         Scanner sc = new Scanner(System.in);
-        while (!sc.hasNextLine()) {
-            System.out.println("---------------------------");
-            System.out.println("Введите значение");
-        }
-
+        System.out.println("Введите значение");
         return sc.nextLine();
     }
 
-    public static void sortParagraphs(String text) {
+    private static String sortStringBySizeParagraphs(String string) {
+        List<String> paragraphs = getParagraphs(string);
+        paragraphs.sort(new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                return getSentencesInParagraphs(o1).size() - getSentencesInParagraphs(o2).size();
+            }
+        });
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String paragraph : paragraphs) {
+            stringBuilder.append(paragraph);
+        }
+        return stringBuilder.toString();
+    }
 
-        String [] paragraphs;
-        paragraphs = text.split("\n");
+    private static List<String> getParagraphs(String string) {
+        List<String> result = new ArrayList<>();
+        Matcher matcher = PARAGRAPHS_PATTERN.matcher(string);
+        while (matcher.find()) {
+            result.add(matcher.group());
+        }
+        return result;
+    }
+
+    private static List<String> getSentencesInParagraphs(String string) {
+        List<String> result = new ArrayList<>();
+        Matcher matcher = SENTENCES_PATTERN.matcher(string);
+        while (matcher.find()) {
+            result.add(matcher.group());
+        }
+        return result;
+    }
+
+    private static String sortWordsOfTextByLength(String string) {
+        List<String> paragraphs = getParagraphs(string);
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String paragraph : paragraphs) {
+            List<String> sentences = getSentencesInParagraphs(paragraph);
+            for (String sentence : sentences){
+                stringBuilder.append(sortWordInSentenceByLength(sentence));
+            }
+        }
+        return stringBuilder.toString();
+    }
+
+    private static String sortWordInSentenceByLength(String string) {
+        List<String> words = new ArrayList<>();
+        Matcher matcher = WORD_PATTERN.matcher(string);
+        while (matcher.find()) {
+            words.add(matcher.group());
+        }
+        words.sort(new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                return o1.length() - o2.length();
+            }
+        });
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < words.size(); i++){
+            stringBuilder.append(" ");
+            if (i == 0){
+                stringBuilder.append(firstUpperCase(words.get(i)));
+            } else {
+                stringBuilder.append(words.get(i).toLowerCase());
+            }
+        }
+        return stringBuilder.toString() + getFinishSymbol(string);
+    }
+
+    private static String getFinishSymbol(String string){
+        Matcher matcher = FINISH_WORD_PATTERN.matcher(string);
+        matcher.find();
+        return matcher.group();
+    }
+
+    public static String firstUpperCase(String word){
+        if (word == null || word.isEmpty()) {
+            return word;
+        }
+        return word.substring(0, 1).toUpperCase() + word.substring(1);
+    }
+
+    public static void sortByParagraphs(String text) {
+        String[] paragraphs = text.split("\n");
 
         // массив с количеством предложений.
         int[] counterSentences;
@@ -166,7 +232,7 @@ public class BreakdownOfText {
 
     public static void sortWord(String text) {
         System.out.println("Введите символ:");
-        String strIn = getStrFromCons();
+        String strIn = enterStringFromConsole();
 
         String [] paragraphs = text.split("\n");
         for (String paragraph : paragraphs) {
@@ -213,10 +279,15 @@ public class BreakdownOfText {
         System.out.println();
     }
 
-    public static final String text = "Первый абзац. Три предложения. Три!\n" +
-            "Второй абзац. Пять предложений. Это третье предложение. Это четвертое. И это пятое...\n" +
-            "Третий абзац и всего одно предложение.\n" +
-            "Четвертый абзац и семь предложений. Второе. Третье. Четвертое. Пятое. Шестое? Седьмое.\n" +
-            "Пятый абзац и снова одно предложение.\n" +
-            "Шестой абзац. Два предложения и всякая фигня непотреьная.";
+    private static void printOptions() {
+        System.out.println("Введите \"0\" чтобы увидеть список команд");
+        System.out.println("Введите \"1\" чтобы напечатать исходный текст");
+        System.out.println("Введите \"2\" чтобы отсортировать  абзацы  по  количеству  предложений");
+        System.out.println("Введите \"3\" чтобы в  каждом  предложении  отсортировать  слова  по  длине");
+        System.out.println("Введите \"4\" чтобы отсортировать лексемы в предложении по убыванию количества вхождений заданного символа, а в случае равенства – по алфавиту");
+        System.out.println("Введите \"9\" чтобы завершить программу");
+        System.out.println("---------------------------");
+    }
+
+
 }
