@@ -13,16 +13,16 @@ import java.util.regex.Pattern;
 
 public class BreakdownOfText {
 
-    private static final String TEXT = "\tПервый абзац. Три предложения. Три!\n" +
-            "\tВторой абзац. Пять предложений. Это третье предложение. Это четвертое. И это пятое...\n" +
-            "\tТретий абзац и всего одно предложение.\n" +
-            "\tЧетвертый абзац и семь предложений. Второе. Третье. Четвертое. Пятое. Шестое? Седьмое.\n" +
-            "\tПятый абзац и снова одно предложение.\n" +
-            "\tШестой абзац. Два предложения и всякая фигня непотребная.\n";
+    private static final String TEXT = "   Первый абзац. Три предложения. Три!\n" +
+            "   Второй абзац. Пять предложений. Это третье предложение. Это четвертое. И это пятое...\n" +
+            "   Третий абзац и всего одно предложение.\n" +
+            "   Четвертый абзац и семь предложений. Второе. Третье. Четвертое. Пятое. Шестое? Седьмое.\n" +
+            "   Пятый абзац и снова одно предложение.\n" +
+            "   Шестой абзац. Два предложения и всякая фигня непотребная.\n";
     private static final Pattern PARAGRAPHS_PATTERN = Pattern.compile("(\\t*.+\\n+)");
     private static final Pattern SENTENCES_PATTERN = Pattern.compile("([^.!?]+[.!?])");
     private static final Pattern WORD_PATTERN = Pattern.compile("([А-Яа-я]+'*[А-Яа-я]+)");
-    private static final Pattern FINISH_WORD_PATTERN = Pattern.compile("([.!?]+\\n*)");
+    private static final Pattern FINISH_WORD_PATTERN = Pattern.compile("([.!?])");
 
     public static void main(String[] args) {
 
@@ -89,11 +89,16 @@ public class BreakdownOfText {
     private static String sortWordsOfTextByLength(String string) {
         List<String> paragraphs = getParagraphs(string);
         StringBuilder stringBuilder = new StringBuilder();
+
         for (String paragraph : paragraphs) {
+
             List<String> sentences = getSentencesInParagraphs(paragraph);
-            for (String sentence : sentences){
+
+            stringBuilder.append('\t');
+            for (String sentence : sentences) {
                 stringBuilder.append(sortWordInSentenceByLength(sentence));
             }
+            stringBuilder.append('\n');
         }
         return stringBuilder.toString();
     }
@@ -111,6 +116,7 @@ public class BreakdownOfText {
             }
         });
         StringBuilder stringBuilder = new StringBuilder();
+
         for (int i = 0; i < words.size(); i++) {
             stringBuilder.append(" ");
             if (i == 0) {
