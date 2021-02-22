@@ -111,9 +111,9 @@ public class BreakdownOfText {
             }
         });
         StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < words.size(); i++){
+        for (int i = 0; i < words.size(); i++) {
             stringBuilder.append(" ");
-            if (i == 0){
+            if (i == 0) {
                 stringBuilder.append(firstUpperCase(words.get(i)));
             } else {
                 stringBuilder.append(words.get(i).toLowerCase());
