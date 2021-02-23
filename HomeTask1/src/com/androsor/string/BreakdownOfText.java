@@ -1,6 +1,9 @@
 package com.androsor.string;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,18 +13,20 @@ import java.util.regex.Pattern;
  * sort words by length in each sentence; sort lexemes in a sentence in descending order of the number of occurrences
  * of a given character, and in case of equality - alphabetically.
  */
-
 public class BreakdownOfText {
 
-    private static final String TEXT = "   Первый абзац. Три предложения. Три!\n" +
-            "   Второй абзац. Пять предложений. Это третье предложение. Это четвертое. И это пятое...\n" +
-            "   Третий абзац и всего одно предложение.\n" +
-            "   Четвертый абзац и семь предложений. Второе. Третье. Четвертое. Пятое. Шестое? Седьмое.\n" +
-            "   Пятый абзац и снова одно предложение.\n" +
-            "   Шестой абзац. Два предложения и всякая фигня непотребная.\n";
+    private static final String TEXT = """
+            \tПервыйц абзац? Три предложения. Три!
+            \tВторой абзац. Пять предложений. Это третье предложение. Это четвертое. И это пятое...
+            \tТретий абзац и всего одно предложение.!
+            \tЧетвертый абзац и семь предложений. Второе. Третье. Четвертое. Пятое. Шестое? Седьмое!
+            \tПятый абзац, и снова одно предложение.
+            \tШестой абзац. Два предложения и всякая фигня непотребная.
+            \tццццц цц ц ццц.
+            """;
     private static final Pattern PARAGRAPHS_PATTERN = Pattern.compile("(\\t*.+\\n+)");
     private static final Pattern SENTENCES_PATTERN = Pattern.compile("([^.!?]+[.!?])");
-    private static final Pattern WORD_PATTERN = Pattern.compile("([А-Яа-я]+'*[А-Яа-я]+)");
+    private static final Pattern WORD_PATTERN = Pattern.compile("([0-9А-Яа-я-]+)");
     private static final Pattern FINISH_WORD_PATTERN = Pattern.compile("([.!?])");
 
     public static void main(String[] args) {
@@ -38,7 +43,7 @@ public class BreakdownOfText {
                 case "1" -> System.out.println(TEXT);
                 case "2" -> System.out.println(sortStringBySizeParagraphs(TEXT));
                 case "3" -> System.out.println(sortWordsOfTextByLength(TEXT));
-                case "4" -> sortWord(TEXT);
+                case "4" -> System.out.println(sortWordsOfTextByCountSymbolsInWord(TEXT, 'ц'));
                 case "9" -> System.exit(9);
                 default -> System.out.println(" Неверная команда");
             }
@@ -54,11 +59,11 @@ public class BreakdownOfText {
     }
 
     private static String sortStringBySizeParagraphs(String string) {
-        List<String> paragraphs = getParagraphs(string);
-        paragraphs.sort(new Comparator<String>() {
+        List<String> paragraphs = getListOfTextItems(string, PARAGRAPHS_PATTERN);
+        paragraphs.sort(new Comparator<>() {
             @Override
             public int compare(String o1, String o2) {
-                return getSentencesInParagraphs(o1).size() - getSentencesInParagraphs(o2).size();
+                return getListOfTextItems(o1, SENTENCES_PATTERN).size() - getListOfTextItems(o2, SENTENCES_PATTERN).size();
             }
         });
         StringBuilder stringBuilder = new StringBuilder();
@@ -68,32 +73,20 @@ public class BreakdownOfText {
         return stringBuilder.toString();
     }
 
-    private static List<String> getParagraphs(String string) {
-        List<String> result = new ArrayList<>();
-        Matcher matcher = PARAGRAPHS_PATTERN.matcher(string);
+    private static List<String> getListOfTextItems(String string, Pattern pattern) {
+        List<String> items = new ArrayList<>();
+        Matcher matcher = pattern.matcher(string);
         while (matcher.find()) {
-            result.add(matcher.group());
+            items.add(matcher.group());
         }
-        return result;
-    }
-
-    private static List<String> getSentencesInParagraphs(String string) {
-        List<String> result = new ArrayList<>();
-        Matcher matcher = SENTENCES_PATTERN.matcher(string);
-        while (matcher.find()) {
-            result.add(matcher.group());
-        }
-        return result;
+        return items;
     }
 
     private static String sortWordsOfTextByLength(String string) {
-        List<String> paragraphs = getParagraphs(string);
+        List<String> paragraphs = getListOfTextItems(string, PARAGRAPHS_PATTERN);
         StringBuilder stringBuilder = new StringBuilder();
-
         for (String paragraph : paragraphs) {
-
-            List<String> sentences = getSentencesInParagraphs(paragraph);
-
+            List<String> sentences = getListOfTextItems(paragraph, SENTENCES_PATTERN);
             stringBuilder.append('\t');
             for (String sentence : sentences) {
                 stringBuilder.append(sortWordInSentenceByLength(sentence));
@@ -104,185 +97,71 @@ public class BreakdownOfText {
     }
 
     private static String sortWordInSentenceByLength(String string) {
-        List<String> words = new ArrayList<>();
-        Matcher matcher = WORD_PATTERN.matcher(string);
-        while (matcher.find()) {
-            words.add(matcher.group());
-        }
-        words.sort(new Comparator<String>() {
+        List<String> words = getListOfTextItems(string, WORD_PATTERN);
+        words.sort(new Comparator<>() {
             @Override
             public int compare(String o1, String o2) {
                 return o1.length() - o2.length();
             }
         });
-        StringBuilder stringBuilder = new StringBuilder();
+        return concatenateWord(words) + getFinishSymbol(string);
+    }
 
+    private static String concatenateWord(List<String> words) {
+        StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < words.size(); i++) {
             stringBuilder.append(" ");
             if (i == 0) {
-                stringBuilder.append(firstUpperCase(words.get(i)));
+                stringBuilder.append(replaceFirstUpperCase(words.get(i)));
             } else {
                 stringBuilder.append(words.get(i).toLowerCase());
             }
         }
-        return stringBuilder.toString() + getFinishSymbol(string);
+        return stringBuilder.toString();
+    }
+
+    private static String replaceFirstUpperCase(String word){
+        return word.substring(0, 1).toUpperCase() + word.substring(1);
     }
 
     private static String getFinishSymbol(String string){
         Matcher matcher = FINISH_WORD_PATTERN.matcher(string);
-        matcher.find();
-        return matcher.group();
-    }
-
-    public static String firstUpperCase(String word){
-        if (word == null || word.isEmpty()) {
-            return word;
+        String punctuation = "";
+        while (matcher.find()) {
+            punctuation = matcher.group();
         }
-        return word.substring(0, 1).toUpperCase() + word.substring(1);
+        return punctuation;
     }
 
-    public static void sortByParagraphs(String text) {
-        String[] paragraphs = text.split("\n");
-
-        // массив с количеством предложений.
-        int[] counterSentences;
-        counterSentences = new int[paragraphs.length];
-        int maxLengthParagraph = 0;
-
-        for (int i = 0; i < paragraphs.length; i++) {
-
-            String [] sentences;
-            sentences = splitSentences(paragraphs[i]);
-            counterSentences[i] = sentences.length;
-
-            if (maxLengthParagraph < sentences.length) {
-                maxLengthParagraph = sentences.length;
-            }
-        }
-
-        //вывод от самого короткого абазаца до самого длинного
-        StringBuilder sb;
-        sb = new StringBuilder();
-
-        for (int i = 1; i <= maxLengthParagraph; i++) {
-
-            for (int j = 0; j < counterSentences.length; j++) {
-
-                if (i == counterSentences[j]) {
-
-                    sb.append("\t");
-                    sb.append(paragraphs[j].trim());
-                    sb.append("\n");
-                }
-            }
-        }
-
-        System.out.println(sb.toString());
-    }
-
-    // разбивка на предложения.
-    public static String [] splitSentences(String text) {
-
-        Pattern pattern;
-        pattern = Pattern.compile("\\.*[.!?]\\s*");
-
-        return pattern.split(text);
-    }
-
-    public static void sortSentence(String text) {
-
-        String [] paragraphs; // масив с обзацами.
-        paragraphs = text.split("\n");
-
+    private static String sortWordsOfTextByCountSymbolsInWord(String string, char symbol) {
+        List<String> paragraphs = getListOfTextItems(string, PARAGRAPHS_PATTERN);
+        StringBuilder stringBuilder = new StringBuilder();
         for (String paragraph : paragraphs) {
-
-            String [] sentences;// массив спредложениями.
-            sentences = splitSentences(paragraph);
-
+            List<String> sentences = getListOfTextItems(paragraph, SENTENCES_PATTERN);
+            stringBuilder.append('\t');
             for (String sentence : sentences) {
-
-                String [] words; // массив со словами.
-                words = splitWords(sentence);
-
-                //сортировка слов
-                for (int k = words.length - 1; k >= 0; k--) {
-                    for (int m = 0; m < k; m++) {
-                        if (words[m].length() > words[m + 1].length()) {
-                            String tmp = words[m];
-                            words[m] = words[m + 1];
-                            words[m + 1] = tmp;
-                        }
-                    }
-                }
-
-                //вывод слов
-                for (String  word : words) {
-                    System.out.print(word + " ");
-                }
-
-                System.out.print("\b. ");
+                    stringBuilder.append(sortWordInSentenceByCountSymbols(sentence, symbol));
             }
-
-            System.out.println();
+            stringBuilder.append('\n');
         }
-
-        System.out.println();
+        return stringBuilder.toString();
     }
 
-    // разбивка на слова.
-    public static String [] splitWords(String sentence) {
-        Pattern pattern;
-        pattern = Pattern.compile("\\s*(\\s|,|;|:)\\s*");
-        return pattern.split(sentence);
+    public static String sortWordInSentenceByCountSymbols(String string, char symbol){
+        List<String> words = getListOfTextItems(string, WORD_PATTERN);
+        words.sort(new Comparator<>() {
+            @Override
+            public int compare(String o1, String o2) {
+                if (getNumberOccurrencesOfCharacter(o1, symbol) < getNumberOccurrencesOfCharacter(o2, symbol)) return 1;
+                if (getNumberOccurrencesOfCharacter(o1, symbol) == getNumberOccurrencesOfCharacter(o2, symbol)) return o1.compareToIgnoreCase(o2);
+                return -1;
+            }
+        });
+        return concatenateWord(words) + getFinishSymbol(string);
     }
 
-    public static void sortWord(String text) {
-        System.out.println("Введите символ:");
-        String strIn = enterStringFromConsole();
-
-        String [] paragraphs = text.split("\n");
-        for (String paragraph : paragraphs) {
-            String[] sentences = splitSentences(paragraph);
-            for (String sentence : sentences) {
-                String[] words = splitWords(sentence);
-
-                //сортировка лексем
-                for (int k = words.length - 1; k >= 0; k--) {
-                    for (int m = 0; m < k; m++) {
-                        int countRight = 0;
-                        int countLeft = 0;
-                        for (int n = 0; n < words[m].length(); n++) { //считаем количество вхождений
-                            if (String.valueOf(words[m].charAt(n)).compareToIgnoreCase(strIn) == 0) {
-                                countLeft++;
-                            }
-                        }
-                        for (int n = 0; n < words[m + 1].length(); n++) {   //считаем количество вхождений следующего символа
-                            if (String.valueOf(words[m + 1].charAt(n)).compareToIgnoreCase(strIn) == 0) {
-                                countRight++;
-                            }
-                        }
-                        if (countLeft < countRight) {   //сравниваем количесво вхождений
-                            String tmp = words[m];
-                            words[m] = words[m + 1];
-                            words[m + 1] = tmp;
-                        } else if (countLeft == countRight) { //если количество вхождений равно, сортировка по алфавиту
-                            String [] forCompare = {words[m], words[m + 1]};
-                            Arrays.sort(forCompare);
-                            words[m] = forCompare[0];
-                            words[m + 1] = forCompare[1];
-                        }
-                    }
-                }
-
-                //вывод слов
-                for (String  word : words) {
-                    System.out.print(word + " ");
-                }
-                System.out.print("\b. ");
-            }
-            System.out.println();
-        }
-        System.out.println();
+    private static long getNumberOccurrencesOfCharacter(String string, char symbol) {
+        return string.chars().filter(ch -> ch == symbol).count();
     }
 
     private static void printOptions() {
@@ -294,6 +173,4 @@ public class BreakdownOfText {
         System.out.println("Введите \"9\" чтобы завершить программу");
         System.out.println("---------------------------");
     }
-
-
 }
