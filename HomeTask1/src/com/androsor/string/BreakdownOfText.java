@@ -24,7 +24,6 @@ public class BreakdownOfText {
     private static final char SYMBOL = 'ц';
     private static final TextSorter TEXT_SORTER = new TextSorter();
 
-
     public static void main(String[] args) {
 
         printOptions();
