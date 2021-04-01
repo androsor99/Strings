@@ -31,14 +31,12 @@ public class TextSorter {
     }
 
     public String sortWordsOfTextByLength(String text) {
-        List<String> paragraphs = getListOfTextItems(text, PARAGRAPHS_PATTERN);
         StringBuilder stringBuilder = new StringBuilder();
+        List<String> paragraphs = getListOfTextItems(text, PARAGRAPHS_PATTERN);
         for (String paragraph : paragraphs) {
             List<String> sentences = getListOfTextItems(paragraph, SENTENCES_PATTERN);
             stringBuilder.append('\t');
-            for (String sentence : sentences) {
-                stringBuilder.append(sortWordInSentenceByLength(sentence)).append(" ");
-            }
+            sentences.forEach(sentence -> stringBuilder.append(sortWordInSentenceByLength(sentence)).append(" "));
             stringBuilder.append("\b\n");
         }
         return stringBuilder.toString();
@@ -79,9 +77,7 @@ public class TextSorter {
         for (String paragraph : paragraphs) {
             List<String> sentences = getListOfTextItems(paragraph, SENTENCES_PATTERN);
             stringBuilder.append('\t');
-            for (String sentence : sentences) {
-                stringBuilder.append(sortWordInSentenceByCountSymbols(sentence, symbol)).append(" ");
-            }
+            sentences.forEach(sentence -> stringBuilder.append(sortWordInSentenceByCountSymbols(sentence, symbol)).append(" "));
             stringBuilder.append("\b\n");
         }
         return stringBuilder.toString();
