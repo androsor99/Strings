@@ -72,8 +72,8 @@ public class TextSorter {
     }
 
     public String sortWordsOfTextByCountSymbolsInWord(String text, char symbol) {
-        List<String> paragraphs = getListOfTextItems(text, PARAGRAPHS_PATTERN);
         StringBuilder stringBuilder = new StringBuilder();
+        List<String> paragraphs = getListOfTextItems(text, PARAGRAPHS_PATTERN);
         for (String paragraph : paragraphs) {
             List<String> sentences = getListOfTextItems(paragraph, SENTENCES_PATTERN);
             stringBuilder.append('\t');
