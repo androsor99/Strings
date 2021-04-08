@@ -25,7 +25,6 @@ public class Test {
     private static final AnalyzerXML ANALYSER = new AnalyzerXML();
 
     public static void main(String[] args) {
-
         System.out.println(ANALYSER.analyzeXML(XML));
     }
 }
