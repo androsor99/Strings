@@ -1,33 +1,31 @@
 package com.androsor.string;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class TextSorter {
 
-    private static final Pattern PARAGRAPHS_PATTERN = Pattern.compile("(\\t*.+\\n+)");
-    private static final Pattern SENTENCES_PATTERN = Pattern.compile("([^.!?]+[.!?])");
-    private static final Pattern WORD_PATTERN = Pattern.compile("([0-9А-Яа-я-]+)");
-    private static final Pattern FINISH_WORD_PATTERN = Pattern.compile("([.!?]+)");
+    private static final Pattern PARAGRAPHS_PATTERN = Pattern.compile("\\t*.+\\n+");
+    private static final Pattern SENTENCES_PATTERN = Pattern.compile(".+?[.!?:;]+\\s");
+    private static final Pattern WORD_PATTERN = Pattern.compile("([^\\s]*[А-Яа-я\\d,])");
+    private static final Pattern FINISH_WORD_PATTERN = Pattern.compile("([:;.!?]+)");
 
     public String sortTextBySizeParagraphs(String text) {
+        StringBuilder stringBuilder = new StringBuilder();
         List<String> paragraphs = getListOfTextItems(text, PARAGRAPHS_PATTERN);
         paragraphs.sort(Comparator.comparingInt(o -> getListOfTextItems(o, SENTENCES_PATTERN).size()));
-        StringBuilder stringBuilder = new StringBuilder();
         paragraphs.forEach(stringBuilder::append);
         return stringBuilder.toString();
     }
 
     private List<String> getListOfTextItems(String text, Pattern pattern) {
-        List<String> items = new ArrayList<>();
-        Matcher matcher = pattern.matcher(text);
-        while (matcher.find()) {
-            items.add(matcher.group());
-        }
-        return items;
+       return pattern.matcher(text).results()
+                .map(MatchResult::group)
+                .collect(Collectors.toList());
     }
 
     public String sortWordsOfTextByLength(String text) {
@@ -35,7 +33,7 @@ public class TextSorter {
         List<String> paragraphs = getListOfTextItems(text, PARAGRAPHS_PATTERN);
         for (String paragraph : paragraphs) {
             List<String> sentences = getListOfTextItems(paragraph, SENTENCES_PATTERN);
-            stringBuilder.append('\t');
+            stringBuilder.append("\t");
             sentences.forEach(sentence -> stringBuilder.append(sortWordInSentenceByLength(sentence)).append(" "));
             stringBuilder.append("\b\n");
         }
@@ -86,10 +84,12 @@ public class TextSorter {
     private String sortWordInSentenceByCountSymbols(String sentence, char symbol){
         List<String> words = getListOfTextItems(sentence, WORD_PATTERN);
         words.sort((o1, o2) -> {
-            if (getNumberOccurrencesOfCharacter(o1, symbol) < getNumberOccurrencesOfCharacter(o2, symbol)) {
+            long count1 = getNumberOccurrencesOfCharacter(o1, symbol);
+            long count2 =  getNumberOccurrencesOfCharacter(o2, symbol);
+            if (count1 < count2) {
                 return 1;
             }
-            else if (getNumberOccurrencesOfCharacter(o1, symbol) == getNumberOccurrencesOfCharacter(o2, symbol)) {
+            else if (count1 == count2) {
                 return o1.compareToIgnoreCase(o2);
             }
             else {
