@@ -7,21 +7,22 @@ package com.androsor.string;
 public class Test {
 
     private static final String XML = """
-                <notes>
-                    <note id = "1">
+                <notes><note id="1">
+                    <note id="1">
                         <to>Вася</to>
                         <from>Света</from>
                         <heading>Напоминание</heading>
                         <body>Позвони мне завтра!</body>
                     </note>
-                    <note id = "2">
+                    <note id="2">
                         <to>Петя</to>
                         <from>Маша</from>
                         <heading>Важное напоминание</heading>
                         <body/>
                     </note>
-                 </notes>
+                </notes>
                 """;
+
     private static final AnalyzerXML ANALYSER = new AnalyzerXML();
 
     public static void main(String[] args) {
