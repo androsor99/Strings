@@ -18,10 +18,10 @@ public class BreakdownOfText {
             \tЧетвертый абзац и семьсемьсемь предл.ожений!!! Второе. Третье. Четвертое. Пятое. Шестое? Седьмое!
             \tПятый абзац, и снова одно предложение.
             \tШестой абзац. Два предложения и всякая фигня непотребная.
-            \tццццц цц ц ццц.
+            \tцццацц цец ц ццц.
             """;
     private static final String INVALID_COMMAND = "Неверная команда";
-    private static final char SYMBOL = 'ц';
+    private static final char SYMBOL = 'е';
     private static final TextSorter TEXT_SORTER = new TextSorter();
 
     public static void main(String[] args) {

@@ -2,6 +2,7 @@ package com.androsor.string;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,12 +30,16 @@ public class TextSorter {
     }
 
     public String sortWordsOfTextByLength(String text) {
+        return getSortedSentence(text, this::sortWordInSentenceByLength);
+    }
+
+    private String getSortedSentence(String text, Function<String, String> function) {
         StringBuilder stringBuilder = new StringBuilder();
         List<String> paragraphs = getListOfTextItems(text, PARAGRAPHS_PATTERN);
         for (String paragraph : paragraphs) {
             List<String> sentences = getListOfTextItems(paragraph, SENTENCES_PATTERN);
             stringBuilder.append("\t");
-            sentences.forEach(sentence -> stringBuilder.append(sortWordInSentenceByLength(sentence)).append(" "));
+            sentences.forEach(sentence -> stringBuilder.append(function.apply(sentence)).append(" "));
             stringBuilder.append("\b\n");
         }
         return stringBuilder.toString();
@@ -70,15 +75,7 @@ public class TextSorter {
     }
 
     public String sortWordsOfTextByCountSymbolsInWord(String text, char symbol) {
-        StringBuilder stringBuilder = new StringBuilder();
-        List<String> paragraphs = getListOfTextItems(text, PARAGRAPHS_PATTERN);
-        for (String paragraph : paragraphs) {
-            List<String> sentences = getListOfTextItems(paragraph, SENTENCES_PATTERN);
-            stringBuilder.append('\t');
-            sentences.forEach(sentence -> stringBuilder.append(sortWordInSentenceByCountSymbols(sentence, symbol)).append(" "));
-            stringBuilder.append("\b\n");
-        }
-        return stringBuilder.toString();
+        return getSortedSentence(text, (sentence) -> sortWordInSentenceByCountSymbols(sentence, symbol));
     }
 
     private String sortWordInSentenceByCountSymbols(String sentence, char symbol){
